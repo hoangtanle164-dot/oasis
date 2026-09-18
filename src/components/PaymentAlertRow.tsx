@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useAppTheme } from '../store/ThemeContext';
 import { Radius, Spacing } from '../utils/theme';
@@ -11,13 +11,19 @@ interface Props {
   amount: number;
   dateText: string;
   color: string;
+  onPress?: () => void;
 }
 
-export default function PaymentAlertRow({ label, name, amount, dateText, color }: Props) {
+export default function PaymentAlertRow({ label, name, amount, dateText, color, onPress }: Props) {
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.row, { backgroundColor: colors.card, borderLeftColor: color }]}>
+    <TouchableOpacity
+      style={[styles.row, { backgroundColor: colors.card, borderLeftColor: color }]}
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.left}>
         <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>
           {label}
@@ -30,7 +36,7 @@ export default function PaymentAlertRow({ label, name, amount, dateText, color }
         <Text style={[styles.amount, { color: colors.text }]}>{formatVNDShort(amount)}</Text>
         <Text style={[styles.date, { color }]}>{dateText}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

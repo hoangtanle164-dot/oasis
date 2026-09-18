@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAppTheme } from '../store/ThemeContext';
@@ -11,21 +11,36 @@ interface Props {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   subtitle?: string;
+  onPress?: () => void;
 }
 
-export default function MetricCard({ title, value, icon, color, subtitle }: Props) {
+export default function MetricCard({ title, value, icon, color, subtitle, onPress }: Props) {
   const { colors } = useAppTheme();
 
-  return (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
+  const content = (
+    <>
       <View style={[styles.iconWrap, { backgroundColor: withOpacity(color, 0.12) }]}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
       <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
       <Text style={[styles.title, { color: colors.textSecondary }]}>{title}</Text>
       {subtitle ? <Text style={[styles.subtitle, { color }]}>{subtitle}</Text> : null}
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: colors.card }]}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={[styles.card, { backgroundColor: colors.card }]}>{content}</View>;
 }
 
 function withOpacity(rgbColor: string, opacity: number): string {

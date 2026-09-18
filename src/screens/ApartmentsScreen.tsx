@@ -1,7 +1,7 @@
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 
 import { useData } from '../store/DataContext';
 import { useAppTheme } from '../store/ThemeContext';
@@ -12,6 +12,7 @@ import ApartmentFormSheet from '../components/ApartmentFormSheet';
 import AddGuestStaySheet from '../components/AddGuestStaySheet';
 import { Apartment, apartmentLabel } from '../models/Apartment';
 import { BUILDINGS } from '../utils/constants';
+import { ApartmentsStackParamList } from '../navigation/types';
 import { BrandColors, Radius, Spacing } from '../utils/theme';
 
 const STATUS_FILTERS = [
@@ -24,6 +25,7 @@ const STATUS_FILTERS = [
 
 export default function ApartmentsScreen() {
   const navigation = useNavigation();
+  const route = useRoute<RouteProp<ApartmentsStackParamList, 'ApartmentsHome'>>();
   const { colors } = useAppTheme();
   const { apartments, refresh, loading } = useData();
 
@@ -31,6 +33,13 @@ export default function ApartmentsScreen() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.building) setBuildingFilter(route.params.building);
+      if (route.params?.status) setStatusFilter(route.params.status);
+    }, [route.params])
+  );
 
   const [selectedApartment, setSelectedApartment] = useState<Apartment | undefined>();
   const [detailVisible, setDetailVisible] = useState(false);

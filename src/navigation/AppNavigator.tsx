@@ -14,11 +14,11 @@ import NotificationCenterScreen from '../screens/NotificationCenterScreen';
 import MonthlySummaryScreen from '../screens/MonthlySummaryScreen';
 import { useAppTheme } from '../store/ThemeContext';
 import { BrandColors } from '../utils/theme';
-import { MoreStackParamList, RootTabParamList } from './types';
+import { ApartmentsStackParamList, MoreStackParamList, RootTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const DashboardStackNav = createNativeStackNavigator();
-const ApartmentsStackNav = createNativeStackNavigator();
+const ApartmentsStackNav = createNativeStackNavigator<ApartmentsStackParamList>();
 const GuestsStackNav = createNativeStackNavigator();
 const PaymentsStackNav = createNativeStackNavigator();
 const MoreStackNav = createNativeStackNavigator<MoreStackParamList>();

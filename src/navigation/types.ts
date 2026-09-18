@@ -1,3 +1,14 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
+export type ApartmentsFilterParams = {
+  building?: string;
+  status?: string;
+};
+
+export type ApartmentsStackParamList = {
+  ApartmentsHome: ApartmentsFilterParams | undefined;
+};
+
 export type MoreStackParamList = {
   MoreHome: undefined;
   Notifications: undefined;
@@ -7,7 +18,7 @@ export type MoreStackParamList = {
 
 export type RootTabParamList = {
   Dashboard: undefined;
-  Apartments: undefined;
+  Apartments: NavigatorScreenParams<ApartmentsStackParamList> | undefined;
   Guests: undefined;
   Payments: undefined;
   More: undefined;

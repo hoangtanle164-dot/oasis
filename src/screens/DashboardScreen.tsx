@@ -1,14 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 
 import { useData } from '../store/DataContext';
 import { useAppTheme } from '../store/ThemeContext';
 import Card from '../components/Card';
 import MetricCard from '../components/MetricCard';
 import PaymentAlertRow from '../components/PaymentAlertRow';
-import { apartmentLabel } from '../models/Apartment';
+import ApartmentDetailSheet from '../components/ApartmentDetailSheet';
+import ApartmentFormSheet from '../components/ApartmentFormSheet';
+import AddGuestStaySheet from '../components/AddGuestStaySheet';
+import { Apartment, apartmentLabel } from '../models/Apartment';
 import { formatDate, formatVND, todayDate, toISODate } from '../utils/formatters';
 import {
   buildBuildingStats,
@@ -20,9 +24,27 @@ import {
 import { BrandColors, Radius, Spacing } from '../utils/theme';
 
 export default function DashboardScreen() {
+  const navigation = useNavigation<any>();
   const { colors } = useAppTheme();
   const { apartments, guestStays, payments, refresh, loading } = useData();
   const [refreshing, setRefreshing] = useState(false);
+
+  const [selectedApartment, setSelectedApartment] = useState<Apartment | undefined>();
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [editingApartment, setEditingApartment] = useState<Apartment | undefined>();
+  const [formVisible, setFormVisible] = useState(false);
+  const [addGuestApartmentId, setAddGuestApartmentId] = useState<string | undefined>();
+  const [addGuestVisible, setAddGuestVisible] = useState(false);
+
+  const openApartmentDetail = (apartment?: Apartment) => {
+    if (!apartment) return;
+    setSelectedApartment(apartment);
+    setDetailVisible(true);
+  };
+
+  const goToApartments = (params: { building?: string; status?: string }) => {
+    navigation.navigate('Apartments', { screen: 'ApartmentsHome', params });
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -53,6 +75,7 @@ export default function DashboardScreen() {
   const guestById = new Map(guestStays.map((g) => [g.id, g]));
 
   return (
+    <>
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.content}
@@ -75,15 +98,34 @@ export default function DashboardScreen() {
       </LinearGradient>
 
       <View style={styles.statsGrid}>
-        <MetricCard title="Tổng căn hộ" value={total} icon="business" color={BrandColors.cardBlue} />
-        <MetricCard title="Đang thuê" value={occupied} icon="person" color={BrandColors.cardGreen} />
-        <MetricCard title="Trống" value={vacant} icon="exit-outline" color="#999999" />
+        <MetricCard
+          title="Tổng căn hộ"
+          value={total}
+          icon="business"
+          color={BrandColors.cardBlue}
+          onPress={() => goToApartments({ building: 'all', status: 'all' })}
+        />
+        <MetricCard
+          title="Đang thuê"
+          value={occupied}
+          icon="person"
+          color={BrandColors.cardGreen}
+          onPress={() => goToApartments({ building: 'all', status: 'occupied' })}
+        />
+        <MetricCard
+          title="Trống"
+          value={vacant}
+          icon="exit-outline"
+          color="#999999"
+          onPress={() => goToApartments({ building: 'all', status: 'vacant' })}
+        />
         <MetricCard
           title="Đã đặt"
           value={reserved}
           icon="calendar"
           color={BrandColors.cardPurple}
           subtitle={maintenance > 0 ? `Bảo trì: ${maintenance}` : undefined}
+          onPress={() => goToApartments({ building: 'all', status: 'reserved' })}
         />
       </View>
 
@@ -122,6 +164,7 @@ export default function DashboardScreen() {
               amount={item.payment.amountDue - item.payment.amountPaid}
               dateText={item.daysUntilDue < 0 ? `Quá hạn ${-item.daysUntilDue} ngày` : item.daysUntilDue === 0 ? 'Hôm nay' : formatDate(item.payment.dueDate)}
               color={item.daysUntilDue < 0 ? BrandColors.cardRed : BrandColors.cardOrange}
+              onPress={() => openApartmentDetail(item.apartment)}
             />
           ))
         ) : (
@@ -159,6 +202,7 @@ export default function DashboardScreen() {
               amount={item.apartment.ownerMonthlyRent ?? 0}
               dateText={item.daysRemaining < 0 ? `Quá hạn ${-item.daysRemaining} ngày` : item.daysRemaining === 0 ? 'Hôm nay' : `Còn ${item.daysRemaining} ngày`}
               color={item.daysRemaining < 0 ? BrandColors.cardRed : BrandColors.cardOrange}
+              onPress={() => openApartmentDetail(item.apartment)}
             />
           ))
         ) : (
@@ -201,7 +245,12 @@ export default function DashboardScreen() {
       <Card>
         <Text style={[styles.cardTitle, { color: colors.text }]}>Chi tiết tòa nhà</Text>
         {buildingStats.map((b) => (
-          <View key={b.building} style={styles.buildingRow}>
+          <TouchableOpacity
+            key={b.building}
+            style={styles.buildingRow}
+            activeOpacity={0.6}
+            onPress={() => goToApartments({ building: b.building, status: 'all' })}
+          >
             <Ionicons name="business-outline" size={20} color={BrandColors.primary} style={styles.buildingIcon} />
             <View style={styles.buildingMiddle}>
               <Text style={[styles.buildingName, { color: colors.text }]}>{b.building}</Text>
@@ -218,7 +267,7 @@ export default function DashboardScreen() {
               </View>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </View>
+          </TouchableOpacity>
         ))}
       </Card>
 
@@ -239,6 +288,7 @@ export default function DashboardScreen() {
                     amount={p.amountDue - p.amountPaid}
                     dateText={formatDate(p.dueDate)}
                     color={BrandColors.cardRed}
+                    onPress={() => openApartmentDetail(apartmentById.get(p.apartmentId))}
                   />
                 ))}
               </View>
@@ -254,6 +304,7 @@ export default function DashboardScreen() {
                     amount={p.amountDue - p.amountPaid}
                     dateText={formatDate(p.dueDate)}
                     color={BrandColors.cardOrange}
+                    onPress={() => openApartmentDetail(apartmentById.get(p.apartmentId))}
                   />
                 ))}
               </View>
@@ -269,6 +320,7 @@ export default function DashboardScreen() {
                     amount={p.amountDue - p.amountPaid}
                     dateText={formatDate(p.dueDate)}
                     color={BrandColors.cardBlue}
+                    onPress={() => openApartmentDetail(apartmentById.get(p.apartmentId))}
                   />
                 ))}
               </View>
@@ -283,7 +335,12 @@ export default function DashboardScreen() {
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>✅ Tất cả hợp đồng còn hạn</Text>
         ) : (
           leaseWarnings.map(({ apartment, daysRemaining }) => (
-            <View key={apartment.id} style={styles.leaseRow}>
+            <TouchableOpacity
+              key={apartment.id}
+              style={styles.leaseRow}
+              activeOpacity={0.6}
+              onPress={() => openApartmentDetail(apartment)}
+            >
               <View style={styles.leaseLeft}>
                 <Text style={[styles.leaseLabel, { color: colors.text }]}>{apartmentLabel(apartment)}</Text>
                 <Text style={[styles.leaseOwner, { color: colors.textSecondary }]}>{apartment.ownerName ?? '--'}</Text>
@@ -296,7 +353,7 @@ export default function DashboardScreen() {
               >
                 <Text style={styles.leaseBadgeText}>{daysRemaining < 0 ? 'Đã hết hạn' : `Còn ${daysRemaining} ngày`}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </Card>
@@ -319,6 +376,25 @@ export default function DashboardScreen() {
         </View>
       </Card>
     </ScrollView>
+
+    <ApartmentDetailSheet
+      visible={detailVisible}
+      onClose={() => setDetailVisible(false)}
+      apartment={selectedApartment}
+      onAddGuest={(apartmentId) => {
+        setAddGuestApartmentId(apartmentId);
+        setAddGuestVisible(true);
+      }}
+      onEdit={(apt) => {
+        setEditingApartment(apt);
+        setFormVisible(true);
+      }}
+    />
+
+    <ApartmentFormSheet visible={formVisible} onClose={() => setFormVisible(false)} apartment={editingApartment} />
+
+    <AddGuestStaySheet visible={addGuestVisible} onClose={() => setAddGuestVisible(false)} apartmentId={addGuestApartmentId} />
+    </>
   );
 }
 
