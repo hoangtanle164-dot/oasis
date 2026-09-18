@@ -21,6 +21,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "owner": "justinle164s-team",
+    "extra": {
+      "eas": {
+        "projectId": "33775ab5-da7d-4211-a848-863ee002227f"
+      }
     }
   }
 }
