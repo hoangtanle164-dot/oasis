@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -118,9 +119,23 @@ export async function exportBackup(data: StoredData): Promise<void> {
     notifications: [],
     exportDate: now.toISOString(),
   };
+  const json = JSON.stringify(payload, null, 2);
+
+  if (Platform.OS === 'web') {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return;
+  }
 
   const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-  await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(payload, null, 2));
+  await FileSystem.writeAsStringAsync(fileUri, json);
 
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {
@@ -141,8 +156,9 @@ export async function importBackup(): Promise<StoredData | null> {
     return null;
   }
 
-  const uri = result.assets[0].uri;
-  const content = await FileSystem.readAsStringAsync(uri);
+  const asset = result.assets[0];
+  const webFile: File | undefined = (asset as unknown as { file?: File }).file;
+  const content = webFile ? await webFile.text() : await FileSystem.readAsStringAsync(asset.uri);
   const parsed = JSON.parse(content);
 
   const data: StoredData = {
