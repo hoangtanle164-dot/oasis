@@ -127,17 +127,21 @@ export default function GuestsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Spacing.sm,
   },
   headerBtn: {
     marginRight: Spacing.sm,
   },
   chipsRow: {
-    maxHeight: 44,
-    marginBottom: Spacing.xs,
+    height: 44,
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: Spacing.sm,
   },
   chipsContent: {
     paddingHorizontal: Spacing.lg,
     alignItems: 'center',
+    height: 44,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,
